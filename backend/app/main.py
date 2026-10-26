@@ -3,8 +3,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.batch import process_batch
 from app.config import get_settings
-from app.models import INTENT_LABELS, CandidateMessage, MessageResult
+from app.models import INTENT_LABELS, BatchRequest, BatchResponse, CandidateMessage, MessageResult
 from app.pipeline import process_message
 from app.providers import build_provider
 
@@ -38,3 +39,8 @@ def intents() -> dict[str, str]:
 @app.post("/api/process", response_model=MessageResult)
 def process(message: CandidateMessage) -> MessageResult:
     return process_message(message, provider)
+
+
+@app.post("/api/process-batch", response_model=BatchResponse)
+def process_many(request: BatchRequest) -> BatchResponse:
+    return process_batch(request.messages, provider)

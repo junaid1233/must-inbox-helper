@@ -5,7 +5,7 @@ nothing here interprets it as instructions.
 """
 
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -70,3 +70,33 @@ class MessageResult(BaseModel):
     needs_human_attention: bool
     warnings: list[str] = Field(default_factory=list)
     provider: str
+
+
+MAX_BATCH = 200
+
+
+class BatchRequest(BaseModel):
+    # Rows are validated one at a time in app.batch, so one bad row can't reject the batch.
+    messages: list[Any] = Field(min_length=1, max_length=MAX_BATCH)
+
+
+class BatchMessageResult(MessageResult):
+    row: int  # 1-based position in the submitted batch
+
+
+class RowError(BaseModel):
+    row: int
+    message_id: Optional[str]
+    errors: list[str]
+
+
+class BatchSummary(BaseModel):
+    received: int
+    processed: int
+    rejected: int
+
+
+class BatchResponse(BaseModel):
+    results: list[BatchMessageResult]
+    errors: list[RowError]
+    summary: BatchSummary
