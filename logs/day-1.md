@@ -39,6 +39,7 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 
 - `py` launcher is broken on this machine (it points at a missing Python 3.13 install) and `python3` is the Microsoft Store stub. Only `python` works. README must use `python`, not `py` / `python3`.
 - Git warned about LF→CRLF conversion → added `.gitattributes`.
+- My pre-commit secret scan had a flag-order bug (`git grep ... --cached` → `fatal`), and I chained the commit after it, so the commit ran without a valid scan. Re-ran it correctly against `HEAD` afterwards: no matches. Lesson: don't chain a commit after a check without failing on the check's exit code.
 
 ## Changes made after verification
 
@@ -51,6 +52,7 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 | `git check-ignore -v .env backend/.env .env.example` | `.env` files ignored; `.env.example` tracked ✅ |
 | `python -m pip index versions fastapi` | 0.162.0 — PyPI reachable ✅ |
 | `npm view vite version` | 8.3.5 — npm registry reachable ✅ |
+| `git grep -nI -E "sk-ant-\|api[_-]?key\s*=\s*[A-Za-z0-9_-]{20,}" HEAD` | exit 1, no matches ✅ (first attempt errored, see above) |
 
 No application tests yet; there is no application code yet.
 
