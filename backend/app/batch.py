@@ -24,6 +24,7 @@ from app.models import (
     CandidateMessage,
     RowError,
 )
+from app.grouping import group_results
 from app.pipeline import process_message
 from app.providers.base import AIProvider
 
@@ -125,6 +126,7 @@ def process_batch(records: list[Any], provider: AIProvider) -> BatchResponse:
 
     return BatchResponse(
         results=results,
+        groups=group_results(results),
         errors=errors,
         summary=BatchSummary(received=len(records), processed=len(results), rejected=len(errors)),
     )

@@ -21,6 +21,11 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
   - Error messages never echo submitted values (Pydantic `include_input=False`); a test plants an SSN-like string in an over-long message and checks it isn't in the error.
   - Wrong types (float/list/bool id, numeric text, object status) → row error. Unknown fields (e.g. `"send_now": true`) are ignored and trigger nothing.
 
+### Task 2 — grouping by intent
+- `app/grouping.py`: `group_results()` returns one group per intent that has messages: `intent`, `label`, `count`, `needs_attention_count`, `message_ids`. Groups follow the fixed `Intent` order (`other_or_unclear` last), members keep input order, empty groups are left out.
+- Groups hold **ids, not copies**, so each result exists once (in `results`) and can't drift out of sync with its group.
+- `BatchResponse` gains `groups`. Rejected rows are not grouped; they stay in `errors`. Provider failures land in `other_or_unclear`.
+
 ## Prompts / AI-assisted approaches used
 
 - Asked the AI to state the batch behaviour rules first, then write tests for them (including a 200-row mixed batch that checks the "every row exactly once" invariant), confirm they fail, and only then implement.
@@ -37,8 +42,15 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 - Probing found the same slip in the duplicate-text warning: "(row 2, 3)". Fixed with one shared helper (`row 2` / `rows 2, 3`) and added a test for the plural case.
 - My first live-test script used `backend/.venv/...` while the shell was already inside `backend/`, so the 201-row and 200-row checks sent **empty bodies**, and their "422" results meant nothing. I caught it from the "No such file" errors and re-ran with correct paths. Lesson: read the whole output, not just the status line.
 
+### Task 2 findings
+- Grouping tests (written first) passed on the first run. Since grouping is a simple bucket step, I probed what actually decides whether groups are useful: **classification of paraphrased messages**. One realistic message per category, none written to match the keywords: **6/10 correct**. All 4 misses went to `other_or_unclear` / low / flagged (the intended safe failure, not a wrong category):
+  - "where my application **stands**" → missed. **Real bug:** the rule was `where … stand` + trailing `\b`, the same inflection bug the reviewer found with "withdrawing" on Day 1, which I hadn't fixed everywhere. Fixed (`stand(s|ing)?`); regression test fails without the fix and passes with it.
+  - "I **interviewed** with Maria … next steps", "I **sent** my application through the portal … did it come through?", "decided to **take another job**, please take me out of the process" → missed. **Deliberately not fixed:** adding keywords for exactly the messages I just tested would overfit and inflate the score. Kept as a baseline; Day 3 will measure on a fresh, unseen set.
+- Live batch: **every processed message (5/5) needed human attention.** If everything is flagged, the flag can't help anyone prioritise. Most flags come from "medium confidence" and "status not provided". Open design question for Day 3/4: split the flag into "must check" (injection, outcome wording, provider failure, unclear intent) vs "informational".
+
 ## Changes made after verification
 
+- `where (i|my application) stand(s|ing)?` + regression test.
 - Shared `_rows()` wording helper; documented in `app/batch.py` that invalid rows don't claim an id and unknown fields are ignored; added tests for both.
 
 ## Tests actually run and results
@@ -52,14 +64,20 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 | Live, 201 rows | HTTP 422 ✅ |
 | Live, 200 rows | HTTP 200 in 0.29 s |
 | Live, `{"messages": []}` | HTTP 422 ✅ |
+| `pytest -q tests/test_grouping.py` (before implementation) | collection error, as expected |
+| `pytest -q` (with grouping) | 144 passed, 2 xfailed |
+| Paraphrase probe, 10 messages (1 per intent) | 6/10 correct; 4 misses all → `other_or_unclear` (safe) |
+| Regression test for "stands", with the fix stashed / restored | 1 failed / passes ✅ |
+| `pytest -q` (after fix) | **145 passed, 2 xfailed** |
+| Live batch (same 8 rows) | groups: status 2 (`c-101`, `c-106`), scheduling 1, compensation 1 (`auto-4`), unclear 1 (`c-108`); sum of counts 5 = processed; no id repeated; rejected rows absent from groups |
 
 ## What I unlearned or changed in my workflow
 
 - Wrote down the identity rules (exactly once, unique ids, which duplicate wins) **before** coding. That turned vague "handle duplicates" into tests with one right answer.
+- Resisted tuning keywords to the probe set I'd just seen. A probe is for measuring, and fixing exactly what it found would make the next measurement meaningless.
 
 ## Remaining work
 
-- Task 2: grouping by intent (backend response and/or frontend).
 - Task 3: CSV import + sample dataset (synthetic).
 - Task 4: frontend batch view with an approve / reject / reopen review workflow.
 - Frontend tests; end-to-end run.

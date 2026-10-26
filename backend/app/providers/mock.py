@@ -18,7 +18,7 @@ from app.providers.base import AIProvider
 
 KEYWORDS: dict[Intent, list[str]] = {
     Intent.APPLICATION_STATUS: [
-        r"status", r"any update", r"an update", r"hear(d)? back", r"where (i|my application) stand",
+        r"status", r"any update", r"an update", r"hear(d)? back", r"where (i|my application) stand(s|ing)?",
         r"progress of my application", r"still under review", r"been a while",
     ],
     Intent.INTERVIEW_SCHEDULING: [

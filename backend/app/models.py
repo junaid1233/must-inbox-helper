@@ -96,7 +96,17 @@ class BatchSummary(BaseModel):
     rejected: int
 
 
+class IntentGroup(BaseModel):
+    intent: Intent
+    label: str
+    count: int
+    needs_attention_count: int
+    # Ids, not copies: each result lives once in `results` and is referenced here.
+    message_ids: list[str]
+
+
 class BatchResponse(BaseModel):
     results: list[BatchMessageResult]
+    groups: list[IntentGroup]
     errors: list[RowError]
     summary: BatchSummary

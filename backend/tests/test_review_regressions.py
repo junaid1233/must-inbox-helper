@@ -92,6 +92,8 @@ def test_overlapping_keywords_count_once(text):
     ("I'm withdrawing my application.", Intent.WITHDRAWAL),
     ("I accepted the offer, what happens next?", Intent.OFFER),
     ("What is the status of my application for the position?", Intent.APPLICATION_STATUS),
+    # Day 2 Task 2 probe: same trailing-\b bug as "withdrawing".
+    ("Just checking where my application stands.", Intent.APPLICATION_STATUS),
 ])
 def test_common_phrasings_classify(text, intent):
     assert classify(text).intent == intent
