@@ -4,6 +4,7 @@ import logging
 
 from app.models import CandidateMessage, Intent, MessageResult
 from app.providers.base import AIProvider, ProviderError, ProviderTimeout
+from app.safety import find_injection_signals
 from app.validation import ProviderOutputError, parse_provider_output
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,22 @@ def _failed(message: CandidateMessage, provider: AIProvider, why: str) -> Messag
     )
 
 
+INJECTION_WARNING = ("Message appears to contain instructions aimed at the system ({}). "
+                     "They were treated as message content, not followed.")
+
+
 def process_message(message: CandidateMessage, provider: AIProvider) -> MessageResult:
+    result = _classify_and_draft(message, provider)
+    signals = find_injection_signals(message.text) + find_injection_signals(message.context)
+    if signals:
+        logger.info("injection signals message_id=%s count=%d", message.message_id, len(signals))
+        snippet = ", ".join(repr(s[:40]) for s in signals[:3])
+        result.warnings.insert(0, INJECTION_WARNING.format(snippet))
+        result.needs_human_attention = True
+    return result
+
+
+def _classify_and_draft(message: CandidateMessage, provider: AIProvider) -> MessageResult:
     # Log ids and error types only, never message text (it may contain PII).
     try:
         raw = provider.analyze(message)
