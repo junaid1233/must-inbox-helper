@@ -14,6 +14,7 @@ Built for the MUST "Unlearn, Use, Raise the Load" 5-day challenge.
 | Daily logs | [logs/day-1.md](logs/day-1.md) … [logs/day-5.md](logs/day-5.md) |
 | Unlearning note | [unlearning-note.md](unlearning-note.md) |
 | Stress test results | [docs/stress-report.md](docs/stress-report.md) |
+| Prompt log (prompts used, what was wrong, how it was checked) | [docs/prompt-log.md](docs/prompt-log.md) |
 | Loom demo | **Not recorded yet.** Script: [docs/loom-script.md](docs/loom-script.md) |
 | Submission checklist | [docs/submission-checklist.md](docs/submission-checklist.md) |
 
