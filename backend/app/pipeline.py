@@ -4,6 +4,7 @@ import logging
 
 from app.models import CandidateMessage, Intent, MessageResult
 from app.providers.base import AIProvider, ProviderError, ProviderTimeout
+from app.checks import find_conflicts, looks_non_english
 from app.safety import find_injection_signals
 from app.validation import ProviderOutputError, parse_provider_output
 
@@ -27,13 +28,24 @@ INJECTION_WARNING = ("Message appears to contain instructions aimed at the syste
                      "They were treated as message content, not followed.")
 
 
+LANGUAGE_WARNING = ("Message may not be in English, or mixes languages. Check the intent, and "
+                    "consider replying in the candidate's language.")
+
+
 def process_message(message: CandidateMessage, provider: AIProvider) -> MessageResult:
     result = _classify_and_draft(message, provider)
+    # Provider-independent checks, most serious first.
+    extra: list[str] = []
     signals = find_injection_signals(message.text) + find_injection_signals(message.context)
     if signals:
         logger.info("injection signals message_id=%s count=%d", message.message_id, len(signals))
         snippet = ", ".join(repr(s[:40]) for s in signals[:3])
-        result.warnings.insert(0, INJECTION_WARNING.format(snippet))
+        extra.append(INJECTION_WARNING.format(snippet))
+    extra += find_conflicts(message.text, message.context, message.application_status)
+    if looks_non_english(message.text):
+        extra.append(LANGUAGE_WARNING)
+    if extra:
+        result.warnings = extra + result.warnings
         result.needs_human_attention = True
     return result
 

@@ -13,6 +13,7 @@ Confidence bands (a heuristic, not a probability):
 import json
 import re
 
+from app.checks import looks_non_english
 from app.models import CandidateMessage, Intent
 from app.providers.base import AIProvider
 
@@ -159,6 +160,11 @@ class MockProvider(AIProvider):
             if len(ranked) > 1:
                 reason += f"; also matched {', '.join(i.value for i, _ in ranked[1:])}"
             reason += "."
+
+        # The keyword rules are English-only, so a match in non-English text is weak evidence.
+        if ranked and looks_non_english(message.text):
+            confidence = "low"
+            reason += " Confidence lowered: the keyword rules only cover English."
 
         body = DRAFTS[intent]
         if intent == Intent.APPLICATION_STATUS:
