@@ -5,7 +5,17 @@ A small recruiting tool that takes a batch of candidate messages, groups them by
 > **Drafts are never sent automatically. Human review is required.**
 > The app has no email, messaging or "send" feature. "Approve" only marks text as ready for you to copy into your own email or messaging tool.
 
-Built for the MUST "Unlearn, Use, Raise the Load" 5-day challenge. Background and decisions: [intent.md](intent.md), [Final directive.md](Final%20directive.md), daily logs in [logs/](logs/), stress results in [docs/stress-report.md](docs/stress-report.md).
+Built for the MUST "Unlearn, Use, Raise the Load" 5-day challenge.
+
+| Deliverable | Where |
+|---|---|
+| Intent and scope | [intent.md](intent.md) |
+| Final operating rules | [Final directive.md](Final%20directive.md) |
+| Daily logs | [logs/day-1.md](logs/day-1.md) … [logs/day-5.md](logs/day-5.md) |
+| Unlearning note | [unlearning-note.md](unlearning-note.md) |
+| Stress test results | [docs/stress-report.md](docs/stress-report.md) |
+| Loom demo | **Not recorded yet.** Script: [docs/loom-script.md](docs/loom-script.md) |
+| Submission checklist | [docs/submission-checklist.md](docs/submission-checklist.md) |
 
 ## Features
 

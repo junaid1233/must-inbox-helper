@@ -69,4 +69,11 @@ The Inbox Helper takes a batch of candidate messages, groups them by what each c
 
 ## Amendments
 
-*None yet.*
+### 2026-10-26 (Day 5): scope as delivered
+
+- **Real LLM provider: not built.** The original intent called it optional. No API key was available, so only the provider interface and the mock exist. An unknown `AI_PROVIDER` stops the backend instead of silently falling back.
+- **Added: provider-independent safety checks.** Prompt-injection signals (Day 1), non-English detection and message/context conflict detection (Day 3). These address the "hallucinated facts" and "prompt injection" risks listed above, and are warnings, not guarantees.
+- **Added: held-out evaluation.** 40 messages written by a separate agent that never saw the rules (`eval/`). This turned the "keyword mock will be brittle" risk into a measured number: 55% accuracy, 0 confidently wrong.
+- **Clarified: no persistence.** Review state stays in the browser's memory; nothing is stored, to avoid keeping candidate data. The page warns before review work is lost.
+- **Clarified: confidence** is a high/medium/low band, never a number.
+- Success criteria above are tracked with evidence in `docs/submission-checklist.md`; the Loom recording is outstanding.
