@@ -26,6 +26,13 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 - Groups hold **ids, not copies**, so each result exists once (in `results`) and can't drift out of sync with its group.
 - `BatchResponse` gains `groups`. Rejected rows are not grouped; they stay in `errors`. Provider failures land in `other_or_unclear`.
 
+### Task 3 — CSV import and sample dataset
+- `sample_data/messages.json`: 15 synthetic messages covering every intent plus hard cases: missing status, a supplied status, prompt injection, vague text, Spanish, a message that contradicts its context (s-014), a fake `555-` phone number, and an exact duplicate (s-015 = s-001 under a different id).
+- `sample_data/messages.csv` is **generated from the JSON** with Python's `csv` writer, so the two can't drift and quoting is correct (a test asserts they match). `sample_data/malformed.csv`: hand-written broken file with its expected outcome fixed in a test.
+- `app/csv_import.py`: header aliases (`message`/`body` → `text`, `name` → `candidate`, `id` → `message_id`, `status`, `notes`, …), unknown columns ignored, Excel BOM stripped, `,` / `;` / tab delimiter detected from the header, blank lines skipped, **`strict=True` quoting**. File-level problems → `CsvFileError` (HTTP 400 with a plain message). Row with the wrong number of values → row error with an "unquoted comma?" hint. More than 200 rows → rejected, never truncated. Error text never includes cell values.
+- `process_batch(..., row_problems=...)` lets the importer report unparseable rows through the same `errors` list, so the "every row exactly once" rule still holds.
+- Endpoints: `POST /api/process-csv` (`{"csv": "..."}`, ≤ 1 MB) and `GET /api/sample`.
+
 ## Prompts / AI-assisted approaches used
 
 - Asked the AI to state the batch behaviour rules first, then write tests for them (including a 200-row mixed batch that checks the "every row exactly once" invariant), confirm they fail, and only then implement.
@@ -48,8 +55,17 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
   - "I **interviewed** with Maria … next steps", "I **sent** my application through the portal … did it come through?", "decided to **take another job**, please take me out of the process" → missed. **Deliberately not fixed:** adding keywords for exactly the messages I just tested would overfit and inflate the score. Kept as a baseline; Day 3 will measure on a fresh, unseen set.
 - Live batch: **every processed message (5/5) needed human attention.** If everything is flagged, the flag can't help anyone prioritise. Most flags come from "medium confidence" and "status not provided". Open design question for Day 3/4: split the flag into "must check" (injection, outcome wording, provider failure, unclear intent) vs "informational".
 
+### Task 3 findings
+- **Why `strict=True` matters (checked, not assumed):** for `x1,"unterminated quote` followed by rows x2 and x3, Python's default CSV mode returned **one** record whose text contained x2 and x3. Two messages lost, no error. Strict mode raises "unexpected end of data". Kept as a regression test.
+- First run: 1 failure, in my test. The regex `more than one` was case-sensitive and the message starts "More". Fixed the test.
+- Probing unseen inputs: **tab-separated text** (as pasted from a spreadsheet) was reported as "no message text column", which is misleading. Fixed by detecting tab as well as `;`, with a test. CRLF line endings, an Excel trailing comma and quotes inside unquoted fields all parsed correctly.
+- Accepted, not fixed (documented): NUL bytes pass through into text (harmless, since drafts never include message text); one cell over 131,072 characters rejects the whole file (the csv module can't resume; messages are capped at 5,000 anyway); formula-like cells (`=HYPERLINK…`) aren't a risk because the app never exports CSV.
+- Sample dataset results: the contradiction case **s-014** ("interview is tomorrow at 2pm" vs context "Monday 3 November, 10:00") lands in `other_or_unclear` with **no warning about the contradiction**. Contradiction detection doesn't exist yet; Day 3 stress case. 8 of 15 sample messages are flagged for attention.
+- A row that fails CSV parsing reports `message_id: null` even when its first cell holds a readable id (e.g. `m-002`). Minor; noted for Day 4.
+
 ## Changes made after verification
 
+- CSV delimiter detection covers tab; tests for tab and CRLF.
 - `where (i|my application) stand(s|ing)?` + regression test.
 - Shared `_rows()` wording helper; documented in `app/batch.py` that invalid rows don't claim an id and unknown fields are ignored; added tests for both.
 
@@ -70,6 +86,13 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 | Regression test for "stands", with the fix stashed / restored | 1 failed / passes ✅ |
 | `pytest -q` (after fix) | **145 passed, 2 xfailed** |
 | Live batch (same 8 rows) | groups: status 2 (`c-101`, `c-106`), scheduling 1, compensation 1 (`auto-4`), unclear 1 (`c-108`); sum of counts 5 = processed; no id repeated; rejected rows absent from groups |
+| `pytest -q` (with CSV tests, first run) | 175 passed, 1 failed (case-sensitive regex in my test), 2 xfailed |
+| Lenient vs strict `csv.reader` on a stray quote | lenient: 1 record swallowing 2 rows; strict: `csv.Error` ✅ |
+| `pytest -q` (after tab support) | **179 passed, 2 xfailed** |
+| Live `POST /api/process-csv` with `messages.csv` | 15 received / 15 processed / 0 rejected; 10 groups (status 4: s-001, s-002, s-011, s-015; unclear 3: s-012, s-013, s-014); 8/15 need attention |
+| Live `POST /api/process-csv` with `malformed.csv` | 7 / 3 / 4: line 3 "4 values … unquoted comma?", blank text, duplicate `m-004`, line 8 "1 value" (matches the expectation written beforehand) |
+| Live CSV with no text column | HTTP 400 with plain message ✅ |
+| Live `GET /api/sample` | 15 messages, s-001 … s-015 |
 
 ## What I unlearned or changed in my workflow
 
@@ -78,6 +101,5 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 
 ## Remaining work
 
-- Task 3: CSV import + sample dataset (synthetic).
 - Task 4: frontend batch view with an approve / reject / reopen review workflow.
 - Frontend tests; end-to-end run.

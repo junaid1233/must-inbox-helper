@@ -12,6 +12,7 @@ Guarantees:
 
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from typing import Any
 
 from pydantic import ValidationError
@@ -56,7 +57,13 @@ def _text_key(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().casefold()
 
 
-def process_batch(records: list[Any], provider: AIProvider) -> BatchResponse:
+def process_batch(
+    records: list[Any],
+    provider: AIProvider,
+    row_problems: Mapping[int, list[str]] | None = None,
+) -> BatchResponse:
+    """`row_problems` lets an importer (e.g. CSV) report rows it could not even parse."""
+    row_problems = row_problems or {}
     supplied_ids = {
         cid for rec in records if isinstance(rec, dict) and (cid := _clean_id(rec.get("message_id")))
     }
@@ -67,6 +74,9 @@ def process_batch(records: list[Any], provider: AIProvider) -> BatchResponse:
     used_ids = set(supplied_ids)
 
     for row, record in enumerate(records, start=1):
+        if row in row_problems:
+            errors.append(RowError(row=row, message_id=None, errors=list(row_problems[row])))
+            continue
         if not isinstance(record, dict):
             errors.append(RowError(row=row, message_id=None,
                                    errors=["Row is not an object with message fields."]))

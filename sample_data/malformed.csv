@@ -1,0 +1,8 @@
+message_id,candidate,text
+m-001,Ada Brooks,"Any update on my application status?"
+m-002,Sam Lee,Could we reschedule, I am travelling that week?
+m-003,,
+m-004,Ravi Patel,"I'd like to withdraw my application."
+,Jo Kim,"What is the salary range for this role?"
+m-004,Duplicate Id,"Different message reusing an id"
+m-007
