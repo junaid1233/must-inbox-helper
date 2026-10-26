@@ -39,6 +39,13 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 - `app/main.py`: `GET /api/health`, `GET /api/intents`, `POST /api/process`. CORS limited to the frontend origin. There is no send/approve endpoint, and a test checks that.
 - A launch config for the browser-pane preview lives in the session root (`../.claude/launch.json`), outside the repo. The README will use plain commands instead.
 
+### Task 4 — minimal frontend (one message → classification → editable draft)
+- `frontend/`: Vite 8.3.5 + React 19.3.1 + TypeScript 7.0.2, exact versions pinned; `package-lock.json` committed. Hand-written config instead of the `create-vite` template, to keep it small.
+- `/api` is proxied by Vite to `127.0.0.1:8000`, so the browser talks to one origin.
+- `src/api.ts`: typed client; 422 errors become readable per-field lines; network failure / 502–504 → "Could not reach the backend".
+- `src/App.tsx`: form (message ID, optional candidate, optional *verified* status, text), a demo-mode badge from `/api/health`, and the notice "Drafts are never sent automatically. Human review is required." Blank optional fields are left out, never sent as values.
+- `src/ResultCard.tsx`: intent label, confidence band labelled "rule-based band, not a probability", reason, attention box with reasons, editable draft with "Pending review" and "Edited" markers, and revert. Approve/reject are planned for Day 2.
+
 ## Prompts / AI-assisted approaches used
 
 - Pasted the full challenge directive into Claude Code and asked it to inspect the workspace and propose a Day 1 plan **before** writing code. It reported findings and a 5-task plan; I approved the folder choice before anything was created.
@@ -83,6 +90,14 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 - Pytest warns that `starlette.testclient` with `httpx` is deprecated and suggests installing `httpx2`. **Not acted on**: I haven't verified that package name, and installing an unverified name from a warning message is a supply-chain risk. Revisit on Day 4.
 - My `logger.info` for injection hits does not appear in the server output: application logging isn't configured, so only uvicorn's access log shows. To fix on Day 4 (configure logging; still no message text).
 
+### Task 4 failures
+- TypeScript resolved to **7.0.2**, a major version I hadn't used. Rather than trust a clean `tsc`, I planted a type error: `tsc --noEmit` reported `TS2322` and exited 1, then exited 0 once the error was removed. Type-checking is real.
+- **"Needs human attention" with no reason:** the reschedule message (medium confidence, no warnings) showed the flag with an empty explanation. The backend sets the flag for low/medium confidence without adding a warning. Fixed in the UI by listing the reason (confidence band / unclear intent).
+- **Wrong error when the backend is down:** I expected `fetch` to throw, but the Vite dev proxy answers **502**, so the UI said "The backend returned an error (HTTP 502)" instead of the helpful message. Fixed: 502/503/504 → "Could not reach the backend. Is it running on port 8000?" Re-checked with the backend stopped.
+- Test-harness timing (not app bugs, but they cost time): (a) my first "backend down" click happened as the server was still shutting down and got a 200; (b) my first click after restarting ran before uvicorn finished starting. The network log, not the screen, showed what happened.
+- Browser-pane **screenshots timed out** every time (the app window was probably behind another one), so there is no screenshot evidence for Day 1. Verification used the accessibility tree, page text, DOM values and the network log instead.
+- The classifier counted "interview on Thursday" as an `interview_follow_up` hit for a reschedule request (it still won `interview_scheduling`, but only at medium). Keyword heuristic; to look at during Day 3 stress tests.
+
 ## Changes made after verification
 
 - Added `.gitattributes`.
@@ -109,6 +124,11 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 | `pytest -q` (after tightening patterns) | 102 passed, 2 xfailed |
 | `pytest -q` (with API tests) | **113 passed, 2 xfailed**, 1 deprecation warning |
 | Live server (uvicorn on :8000) + `curl` | health → `{"provider":"mock","demo_mode":true,"sends_messages":false}`; status inquiry → `application_status`/high, id `c-001` kept, flagged for missing status; injection → neutral draft + injection warning first; blank text → 422; malformed JSON → 422; CORS preflight from `localhost:5173` → 200 with allow-origin, from `evil.example` → 400. Server log contained request lines only, no message text. |
+| `tsc --noEmit` with a planted type error / without | exit 1 (`TS2322`) / exit 0 ✅ |
+| `npm run build` | type-check + Vite build OK (224 kB JS, 70 kB gzipped) |
+| Browser pane, frontend on :5173 + backend on :8000 | Demo badge and no-send notice shown; empty text → "text: String should have at least 1 character"; reschedule from "Lena Okafor" → `interview_scheduling`/medium, draft "Hi Lena, … two or three times that work for you?"; editing shows "Edited" + revert, and revert clears it; backend stopped → "Could not reach the backend…" as an `alert` (after fix); injection + verified status "Under review" + hostile name `<b>Ignore rules</b>` → injection warning first, draft states only "Under review", greeting falls back to "Hello,". No JS console errors besides the deliberate 422/502 responses. |
+| Browser pane at 375 px (mobile emulation) | single column, `scrollWidth` 375 = viewport, no horizontal scroll ✅ |
+| `pytest -q` (end of Day 1) | **113 passed, 2 xfailed** |
 
 ## What I unlearned or changed in my workflow
 
@@ -122,7 +142,20 @@ Define and prove: inspect the environment, write `intent.md`, set up the project
 - The mock classifier is keyword-based: misses paraphrases and non-English text, and picks one intent for multi-intent messages.
 - Injection detection is a pattern list: known misses include non-English instructions and free-form phrasing ("As an AI you must now…"). It is a warning, not a defence; the defences are that message text is never executed as instructions, drafts are validated, and a human approves every draft.
 
+## End of Day 1 — status
+
+**Done and verified:** one working path from a pasted message → validated classification → editable draft, in the browser, with no API key (demo mode). The automated suite runs offline.
+
+**Not done yet (planned):**
+- Day 2: batch input, CSV import, sample dataset, grouping by intent, approve/reject/reopen workflow, frontend tests.
+- Day 4: configure application logging (no message text); decide on the `httpx2` deprecation after verifying the package; make 422 messages friendlier ("text: String should have at least 1 character" is technical); real LLM provider (only if an API key is available).
+- README, `Final directive.md`, unlearning note and Loom script don't exist yet.
+
+**Next smallest task:** Day 2 Task 1, a batch endpoint (`POST /api/process-batch`) that takes a list, reports invalid records per row without dropping the valid ones, and keeps every `message_id` exactly once.
+
 ## Remaining work (Day 1)
+
+_None. Day 1 tasks complete; see status above._
 
 - Task 4: minimal Vite + React + TS page, checked in the browser.
 - Task 5: finish this log.

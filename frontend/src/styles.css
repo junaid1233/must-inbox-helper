@@ -1,0 +1,113 @@
+:root {
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --text: #1c2330;
+  --muted: #5b6474;
+  --border: #d9dde4;
+  --accent: #2554c7;
+  --accent-text: #ffffff;
+  --warn-bg: #fff6e0;
+  --warn-border: #e5b544;
+  --error-bg: #fdecec;
+  --error-border: #d9534f;
+  --notice-bg: #e8effc;
+  --high: #1e7a46;
+  --medium: #8a6100;
+  --low: #b3261e;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c;
+    --panel: #1d2128;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --border: #343a45;
+    --accent: #6d95ff;
+    --accent-text: #0d1220;
+    --warn-bg: #3a2f12;
+    --warn-border: #a3801f;
+    --error-bg: #3d1a1a;
+    --error-border: #c4544f;
+    --notice-bg: #1d2a45;
+    --high: #5fcf8e;
+    --medium: #e3b341;
+    --low: #ff8a80;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); }
+
+.page { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.topbar h1 { font-size: 1.4rem; margin: 8px 0; }
+
+.badge { font-size: 0.8rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); }
+.badge-demo { background: var(--warn-bg); border-color: var(--warn-border); }
+
+.notice {
+  background: var(--notice-bg); border-left: 4px solid var(--accent);
+  padding: 10px 14px; border-radius: 6px; font-weight: 600; margin: 8px 0 16px;
+}
+
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+.panel h2 { font-size: 1.05rem; margin: 0 0 12px; }
+
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+
+input, textarea {
+  font: inherit; font-weight: 400; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; width: 100%;
+}
+textarea { resize: vertical; }
+input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+button {
+  font: inherit; font-weight: 600; border: none; border-radius: 6px; padding: 9px 16px;
+  background: var(--accent); color: var(--accent-text); cursor: pointer;
+}
+button:disabled { opacity: 0.6; cursor: progress; }
+button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+
+.hint { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+.muted { color: var(--muted); }
+
+.error {
+  background: var(--error-bg); border: 1px solid var(--error-border);
+  padding: 10px 12px; border-radius: 6px; white-space: pre-line;
+}
+
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+@media (max-width: 480px) { .facts { grid-template-columns: 1fr; } }
+.facts dt { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.facts dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+
+.conf { text-transform: capitalize; }
+.conf-high { color: var(--high); }
+.conf-medium { color: var(--medium); }
+.conf-low { color: var(--low); }
+
+.reason { margin: 0 0 12px; overflow-wrap: anywhere; }
+
+.attention {
+  background: var(--warn-bg); border: 1px solid var(--warn-border);
+  border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;
+}
+.attention ul { margin: 6px 0 0; padding-left: 18px; }
+.attention li { overflow-wrap: anywhere; }
+
+.draft-label > span { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.status-pill {
+  font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border); color: var(--muted);
+}
+.pill-edited { border-color: var(--accent); color: var(--accent); }
