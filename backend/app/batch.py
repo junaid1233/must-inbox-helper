@@ -25,6 +25,7 @@ from app.models import (
     CandidateMessage,
     RowError,
 )
+from app.errors import friendly_message
 from app.grouping import group_results
 from app.pipeline import process_message
 from app.providers.base import AIProvider
@@ -42,11 +43,7 @@ def _clean_id(raw: Any) -> str | None:
 
 
 def _describe(exc: ValidationError) -> list[str]:
-    lines = []
-    for err in exc.errors(include_input=False, include_url=False):
-        field = ".".join(str(part) for part in err["loc"])
-        lines.append(f"{field}: {err['msg']}" if field else err["msg"])
-    return lines
+    return [friendly_message(err) for err in exc.errors(include_input=False, include_url=False)]
 
 
 def _rows(rows: list[int]) -> str:

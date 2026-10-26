@@ -59,21 +59,12 @@ export const MAX_CSV_BYTES = 1_000_000;
 
 export class ApiError extends Error {}
 
-interface ValidationIssue {
-  loc: (string | number)[];
-  msg: string;
-}
-
-// FastAPI errors carry either a plain message or a list of per-field issues.
+// The backend sends either a plain message or a list of {loc, msg} issues whose
+// messages already name the field ("Message text is empty.").
 function describeError(detail: unknown): string {
   if (typeof detail === "string") return detail;
   if (!Array.isArray(detail)) return "The request was not valid.";
-  return (detail as ValidationIssue[])
-    .map((issue) => {
-      const field = issue.loc.filter((part) => part !== "body").join(".");
-      return field ? `${field}: ${issue.msg}` : issue.msg;
-    })
-    .join("\n");
+  return (detail as { msg: string }[]).map((issue) => issue.msg).join("\n");
 }
 
 const UNREACHABLE = "Could not reach the backend. Is it running on port 8000?";
