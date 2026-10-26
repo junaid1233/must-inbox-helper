@@ -70,12 +70,16 @@ export default function App() {
               <input value={form.message_id} onChange={(e) => update("message_id")(e.target.value)} />
             </label>
             <label>
-              Candidate <span className="hint">(optional)</span>
+              <span>
+                Candidate <span className="hint">(optional)</span>
+              </span>
               <input value={form.candidate} onChange={(e) => update("candidate")(e.target.value)} />
             </label>
           </div>
           <label>
-            Known application status <span className="hint">(optional, only if verified)</span>
+            <span>
+              Known application status <span className="hint">(optional, only if verified)</span>
+            </span>
             <input
               value={form.application_status}
               onChange={(e) => update("application_status")(e.target.value)}
