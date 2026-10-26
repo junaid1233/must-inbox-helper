@@ -33,6 +33,14 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 - `process_batch(..., row_problems=...)` lets the importer report unparseable rows through the same `errors` list, so the "every row exactly once" rule still holds.
 - Endpoints: `POST /api/process-csv` (`{"csv": "..."}`, ≤ 1 MB) and `GET /api/sample`.
 
+### Task 4 — batch review UI with approve / reject / reopen
+- `frontend/src/review.ts`: review state as **pure functions** with no network access. Rules: every draft starts `pending`; **approve** only while pending and only with non-blank text, and it **locks** the draft; **reject** only while pending; **reopen** returns approved/rejected to pending **keeping the edited text**; edits only while pending; invalid actions are no-ops. "Edited" = current text ≠ generated text.
+- `InputPanel.tsx`: tabs for **Paste** (one message per blank-line-separated paragraph), **Import CSV** (file input, 1 MB check, column help) and **Sample data**.
+- `BatchView.tsx` / `MessageCard.tsx`: summary (received / processed / rejected) and live review counts; "show only messages that need attention" filter; "Rows not processed" list; one section per intent group. Each card shows the original message, known status/context, confidence band + reason, attention reasons, an editable draft, and actions. Approved cards say **"Approved for use. Not sent: copy it into your own email or messaging tool."** with Copy and Reopen.
+- Backend: batch results now include the validated `message`, so the reviewer sees exactly what each draft answers (CSV rows are parsed server-side, so the browser didn't have the text).
+- Review state is **in memory only**. Decision: storing candidate messages in `localStorage` would leave PII in the browser, so instead the page warns before unload when there's review work, and asks before a new batch replaces the current review.
+- Frontend tests: Vitest 5 + Testing Library + jsdom. `review.test.ts` (state rules, paste parsing) and `App.test.tsx` (the full flow with `fetch` mocked).
+
 ## Prompts / AI-assisted approaches used
 
 - Asked the AI to state the batch behaviour rules first, then write tests for them (including a 200-row mixed batch that checks the "every row exactly once" invariant), confirm they fail, and only then implement.
@@ -62,6 +70,15 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 - Accepted, not fixed (documented): NUL bytes pass through into text (harmless, since drafts never include message text); one cell over 131,072 characters rejects the whole file (the csv module can't resume; messages are capped at 5,000 anyway); formula-like cells (`=HYPERLINK…`) aren't a risk because the app never exports CSV.
 - Sample dataset results: the contradiction case **s-014** ("interview is tomorrow at 2pm" vs context "Monday 3 November, 10:00") lands in `other_or_unclear` with **no warning about the contradiction**. Contradiction detection doesn't exist yet; Day 3 stress case. 8 of 15 sample messages are flagged for attention.
 - A row that fails CSV parsing reports `message_id: null` even when its first cell holds a readable id (e.g. `m-002`). Minor; noted for Day 4.
+
+### Task 4 findings
+- **Node engine mismatch:** `jsdom@30.1.3` and its dependencies require Node ≥ 22.19 (some ≥ 22.22.2); this machine has **22.13.1**. npm only warns, and the non-DOM tests happened to pass, but running on an unsupported engine isn't verification. Rather than change the system Node, I pinned **`jsdom@29.1.1`** (`engines: ^22.13.0`). A clean `npm ci` now gives 0 `EBADENGINE` warnings.
+- Frontend tests passed on the first run (18/18). **Mutation check of the key test:** I temporarily made "Approve draft" also call `fetch("/api/send")`. The "never makes a network request" test **failed** (`expected 4 to be 3`), then passed again after restoring the file. So the test really guards the no-send rule.
+- **Accessibility, found in the browser:** the sample batch had **15 buttons all named "Approve draft"**, so a screen-reader user listing buttons can't tell them apart. Every action button now has a name that says which message it acts on ("Approve draft for Priya Raman (s-001)"); visible text unchanged; test added.
+- **Attention noise I introduced:** every pasted message was flagged "No message_id supplied", because pasted text never has ids. The paste parser now assigns `paste-1…`, so the backend warning is kept for imports where an id was expected. Re-checked in the browser: 0 such warnings for pasted input.
+- Grammar: "1 need attention" → "1 needs attention".
+- My Python patch script for test updates mangled `\n` escapes in a heredoc, so it changed nothing (the 2 stale tests failed, correctly). Redid it with the Edit tool. Lesson: don't patch source through shell heredocs when escaping is involved.
+- Removed CSS left over from the single-message page (`.layout`, `.row`, `.facts`).
 
 ## Changes made after verification
 
@@ -93,13 +110,34 @@ Complete the core workflow: batch input, CSV import, sample dataset, grouping by
 | Live `POST /api/process-csv` with `malformed.csv` | 7 / 3 / 4: line 3 "4 values … unquoted comma?", blank text, duplicate `m-004`, line 8 "1 value" (matches the expectation written beforehand) |
 | Live CSV with no text column | HTTP 400 with plain message ✅ |
 | Live `GET /api/sample` | 15 messages, s-001 … s-015 |
+| `npm ci` with jsdom 30.1.3 / 29.1.1 | EBADENGINE warnings / **0** |
+| `pytest -q` (batch results carry `message`) | 180 passed, 2 xfailed |
+| `npx vitest run` (first run) | 18 passed |
+| Mutation: Approve also calls `fetch` | "never makes a network request" test **fails** (`expected 4 to be 3`) ✅; restored → passes |
+| `npx vitest run` (final) | **19 passed** |
+| `npm run build` | OK |
+| Browser: sample dataset | 15/15 processed, 10 groups; card shows original text, reasons, draft |
+| Browser: edit + approve s-001 | "Edited", then "Approved", green, draft read-only, "Not sent…" note; **`/api/` request count unchanged (32 before and after)** |
+| Browser: reject s-012 | "Rejected"; counts "13 pending · 1 approved · 1 rejected · 1 edited"; still 32 requests |
+| Browser: CSV import of `malformed.csv` with review work present | confirmation asked first; 7 / 3 / 4 with the 4 row reasons listed; review reset to 3 pending |
+| Browser: paste 3 paragraphs (+ a whitespace-only one) | "Process 3 messages"; multi-line message kept whole; ids `paste-1…` after fix, 0 "No message_id" warnings |
+| Browser: 375 px | no element wider than the viewport; cards stack |
 
 ## What I unlearned or changed in my workflow
 
 - Wrote down the identity rules (exactly once, unique ids, which duplicate wins) **before** coding. That turned vague "handle duplicates" into tests with one right answer.
 - Resisted tuning keywords to the probe set I'd just seen. A probe is for measuring, and fixing exactly what it found would make the next measurement meaningless.
 
+## End of Day 2 — status
+
+**Done and verified:** paste / CSV / sample input → per-row validation → classification → grouping → editable drafts with approve / reject / reopen, entirely in demo mode. Approval was shown not to make any network request, by a test that was mutation-checked and by the browser network log. Tests: 180 backend (+2 known xfail), 19 frontend.
+
+**Not done / open:**
+- "Needs attention" is still set on most messages (8/15 of the sample); the must-check vs informational split is still open.
+- Contradiction between message and context (s-014) isn't detected.
+- No end-to-end test that drives the real browser against the real backend; the component tests mock `fetch`, and the live flow was checked by hand in the browser pane.
+- Review state is lost on reload (by design, warned).
+
 ## Remaining work
 
-- Task 4: frontend batch view with an approve / reject / reopen review workflow.
-- Frontend tests; end-to-end run.
+- Day 3: stress tests (fresh paraphrase set, the directive's 18 scenarios), contradiction handling, attention-flag design.

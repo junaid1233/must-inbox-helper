@@ -82,6 +82,8 @@ class BatchRequest(BaseModel):
 
 class BatchMessageResult(MessageResult):
     row: int  # 1-based position in the submitted batch
+    # The validated input, so the reviewer sees exactly what the draft answers.
+    message: CandidateMessage
 
 
 class RowError(BaseModel):

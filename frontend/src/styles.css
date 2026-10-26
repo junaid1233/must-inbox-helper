@@ -54,15 +54,11 @@ body { margin: 0; background: var(--bg); }
   padding: 10px 14px; border-radius: 6px; font-weight: 600; margin: 8px 0 16px;
 }
 
-.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
 
 .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
 .panel h2 { font-size: 1.05rem; margin: 0 0 12px; }
 
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
 
 input, textarea {
   font: inherit; font-weight: 400; color: var(--text); background: var(--bg);
@@ -86,10 +82,6 @@ button.secondary { background: transparent; color: var(--accent); border: 1px so
   padding: 10px 12px; border-radius: 6px; white-space: pre-line;
 }
 
-.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
-@media (max-width: 480px) { .facts { grid-template-columns: 1fr; } }
-.facts dt { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-.facts dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
 
 .conf { text-transform: capitalize; }
 .conf-high { color: var(--high); }
@@ -111,3 +103,53 @@ button.secondary { background: transparent; color: var(--accent); border: 1px so
   border: 1px solid var(--border); color: var(--muted);
 }
 .pill-edited { border-color: var(--accent); color: var(--accent); }
+
+/* --- batch review (Day 2) --- */
+:root { --ok: #1e7a46; --ok-bg: #e7f5ec; --bad: #b3261e; --bad-bg: #fdecec; }
+@media (prefers-color-scheme: dark) {
+  :root { --ok: #5fcf8e; --ok-bg: #173324; --bad: #ff8a80; --bad-bg: #3d1a1a; }
+}
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.tab {
+  background: transparent; color: var(--muted); border-radius: 6px 6px 0 0;
+  border: 1px solid transparent; border-bottom: none; padding: 8px 12px; font-weight: 600;
+}
+.tab-active { color: var(--text); border-color: var(--border); background: var(--bg); }
+code { font-size: 0.85em; background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+.hint code { color: var(--text); }
+
+.results { margin-top: 16px; display: flex; flex-direction: column; gap: 16px; }
+.summary p { margin: 4px 0; }
+label.inline { flex-direction: row; align-items: center; gap: 8px; font-weight: 400; margin: 8px 0 0; }
+label.inline input { width: auto; }
+
+.row-errors { border-color: var(--error-border); }
+.row-errors h3, .group h3 { font-size: 1rem; margin: 0 0 8px; }
+.row-errors ul { margin: 0; padding-left: 18px; }
+.row-errors li { overflow-wrap: anywhere; margin-bottom: 4px; }
+
+.group { display: flex; flex-direction: column; gap: 12px; }
+.group .count { color: var(--muted); font-weight: 400; }
+
+.card { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.card-approved { border-left-color: var(--ok); }
+.card-rejected { border-left-color: var(--bad); }
+.card-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.card-head h4 { margin: 0; font-size: 1rem; }
+.pills { margin-left: auto; display: flex; gap: 6px; }
+.pill-approved { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+.pill-rejected { border-color: var(--bad); color: var(--bad); background: var(--bad-bg); }
+
+.original {
+  margin: 0 0 10px; padding: 8px 12px; border-left: 3px solid var(--border);
+  background: var(--bg); border-radius: 0 6px 6px 0; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.known { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 10px; font-size: 0.9rem; }
+.known dt { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.known dd { margin: 0; overflow-wrap: anywhere; }
+
+textarea[readonly] { opacity: 0.8; cursor: default; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button.danger { color: var(--bad); border-color: var(--bad); }
+.approved-note { margin: 0; color: var(--ok); font-weight: 600; flex-basis: 100%; }

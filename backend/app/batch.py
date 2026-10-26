@@ -132,7 +132,7 @@ def process_batch(
                          f"({_rows([rows_for_id[t] for t in twins])}).")
         result.warnings = extra + result.warnings
         result.needs_human_attention = result.needs_human_attention or bool(extra)
-        results.append(BatchMessageResult(**result.model_dump(), row=row))
+        results.append(BatchMessageResult(**result.model_dump(), row=row, message=message))
 
     return BatchResponse(
         results=results,

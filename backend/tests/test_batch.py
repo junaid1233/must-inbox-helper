@@ -56,6 +56,15 @@ def test_mixed_valid_and_invalid_rows():
     assert resp.errors[1].message_id is None
 
 
+def test_results_carry_the_validated_message_for_review():
+    resp = process_batch([{"text": "  Any update?  ", "candidate": "Ana", "context": ""}], mock)
+    message = resp.results[0].message
+    assert message.message_id == resp.results[0].message_id == "auto-1"
+    assert message.text == "Any update?"
+    assert message.candidate == "Ana"
+    assert message.context is None
+
+
 def test_errors_do_not_echo_submitted_values():
     secret = "my SSN is 123-45-6789 " + "y" * 6000
     resp = process_batch([{"message_id": "p1", "text": secret}], mock)
