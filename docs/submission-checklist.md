@@ -36,7 +36,10 @@ Checked on 2026-10-26 (Day 5) against section 10 ("Acceptance criteria") and sec
 
 ## Before submitting (author)
 
-1. Record the Loom using `docs/loom-script.md`, open the link in a private window to confirm it plays, then add it to the README table.
-2. Put `unlearning-note.md` in your own voice.
-3. Push the repository to its submission host and confirm the link opens; this hasn't been done (the repo is local only).
-4. Run `sh scripts/check-secrets.sh` before the final push.
+*Updated 2026-10-30: the unlearning note was rewritten in first person, the spoken script was added to `docs/loom-script.md`, and an "About this submission" paragraph was added to the README.*
+
+1. In `unlearning-note.md`, replace the **[I need to add this myself…]** line with your own words: how it felt to let AI write the code, and which habit was hardest to drop.
+2. Put your name into the first line of the spoken script in `docs/loom-script.md`.
+3. Record the Loom, open the link in a private window to confirm it plays, then add it to the README deliverables table (it says "Not recorded yet").
+4. Run `sh scripts/check-secrets.sh`, then push to `github.com/junaid1233/must-inbox-helper` and confirm the link opens.
+5. Log any further work under its real date, not inside Days 1–5.

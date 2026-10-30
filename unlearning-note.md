@@ -1,40 +1,34 @@
-# Unlearning note
+# What I unlearned
 
-*Drafted on Day 5 from the events recorded in `logs/day-1.md` … `logs/day-5.md`. Every example below happened and is logged there. Personal reflections should be added in the author's own words.*
+I built Inbox Helper AI-first. The AI wrote nearly all of the code, tests and docs. My part was setting the rules, approving each step, checking what came back, and deciding what *not* to do. One honest note up front: all five "day" phases happened on the same calendar day, 26 October 2026, and every log says so.
 
-## Habits abandoned
+**I stopped scaffolding everything first.** My first instruction was to inspect the workspace and write `intent.md` before any code. After that the app grew in small slices: one message, then the API, the UI, batches, grouping, CSV import, review. That was 14 small commits by the end of Day 5.
 
-1. **Scaffolding everything up front.** The first action was to inspect the workspace and write `intent.md`; code came in small, separately committed slices (single message → API → UI → batch → grouping → CSV → review).
-2. **Treating a green first run as done.** It happened repeatedly and was wrong every time it was checked: the first backend suite was 41/41 green while an independent review reported 9 findings, 6 of them confirmed by running code (including a crash on deeply nested JSON); the injection detector passed its tests yet missed 5 of 6 unseen attacks and falsely flagged 3 of 5 harmless messages. A green first run became a signal to probe harder.
-3. **Writing my own evaluation data.** On Day 2 the paraphrase probe was written by the same hand that wrote the keyword rules. On Day 3 a separate agent, with no access to the code, wrote 40 held-out messages; accuracy came out at 55%, lower than the self-written probe (6/10).
-4. **Acting on impressions.** On Day 2 the attention flag looked over-used. The Day 3 breakdown showed most flags had real reasons, and narrowing it would have made one wrong classification unflagged. The change was not made.
-5. **Trusting documentation because it was written down.** `.env.example` offered a provider that never existed (written on Day 1, wrong until Day 4), and the first draft of `Final directive.md` claimed a warnings cap that the code doesn't enforce. Both were found only by checking against the running system.
+**I stopped trusting a green first run.** My first backend suite passed 41 out of 41. Then a second AI agent, given only the code and the requirements, came back with 9 findings and confirmed 6 by running code. One was a crash on a deeply nested JSON reply. Another was an outcome check that "Congrats!" slipped straight past. The prompt-injection detector was the same story: its tests passed, then it missed 5 of 6 attacks I hadn't tested and wrongly flagged 3 of 5 normal messages. Not every green run was hiding something; the "approval never sends" test held up when I broke the code on purpose. But now a green first run means: probe harder.
 
-## How the AI-first workflow changed the process
+**I stopped writing my own test data.** On Day 2 I wrote both the keyword rules and the paraphrase probe, and scored 6 out of 10. On Day 3 a separate agent with no access to the code wrote 40 test messages. The score was 22 out of 40 (55%). Lower, and more honest.
 
-The AI wrote nearly all the code, tests and documents. The human-directed parts were: deciding behaviour before code (identity rules, review rules, stress expectations), insisting on failing tests before fixes, and deciding what *not* to do (no keyword tuning on held-out data; no `httpx2` swap days before submission). Three separate AI roles were used deliberately: a **builder**, an **independent reviewer** given only code and requirements, and an **independent data writer** given no code at all.
+**I stopped acting on a hunch.** On Day 2 the "needs attention" flag looked like it fired too often. On Day 3 I counted why: only 2 of 15 sample messages were flagged for medium confidence alone, and removing that rule would have let one wrong answer through unflagged. So I left it.
 
-## AI output that needed correction (examples)
+**I stopped believing docs because they were written down.** `.env.example` offered an AI provider that didn't exist, from Day 1 until I checked it on Day 4. `Final directive.md` claimed a warnings limit the code doesn't enforce. Even the first draft of this note said "9 confirmed findings" when the log says 6.
 
-- Output validation crashed on `"[" * 100000` (`RecursionError`); outcome-wording checks were bypassed by "Congrats!", a curly apostrophe and a zero-width space.
-- The first contradiction check reused the *draft* outcome list on *candidate* text and flagged "Congrats on the new role at your agency!".
-- The secret-scan step went wrong three times (argument order twice, then an exit-code bug) before it became a tested script.
-- A Python patch script mangled escape characters and silently changed nothing; a too-new `jsdom` required a newer Node than the machine had.
+**What checking caught:**
+- The secret-scan step was wrong three times before I made it a tested script.
+- A test library needed a newer Node than my machine had.
+- On purpose, I made "Approve" call the network. The "approval never sends" test failed, so I trust that test.
+- A fresh clone, set up only from the README, worked on Windows.
 
-## How independent verification improved the result
+**Easier and harder.** Breadth got easier: tests, edge cases and docs came fast. Checking got harder. There was a lot of confident, plausible code, and checking it, not writing it, became the slow part.
 
-The independent review reported 9 findings (6 confirmed by the reviewer running code; part of one did not hold up). Most were then reproduced by regression tests that failed before the fix and are still in the suite. A **mutation check** proved the most important test is real: making "Approve" call `fetch` made the "approval never sends" test fail. The **fresh-clone run** strictly from the README caught nothing new, which is the point: it is the evidence that setup works for someone else.
+**Still not solved.**
+- The mock gets 55% on unseen messages. It was never confidently wrong, but it misses a lot.
+- There's no real AI provider yet.
+- The injection, language and conflict checks are heuristics with known misses.
+- I only verified setup on Windows, and the browser flow was checked by hand, not by an automated test.
 
-## What became easier, and what became harder
-
-*Easier:* breadth. Tests, edge-case probes, docs and UI arrived quickly. *Harder:* the volume of plausible-looking code to verify, and the AI's confident tone on wrong output, made checking the bottleneck rather than writing.
-
-## What failed or remains uncertain
-
-- No real LLM provider was built or tested; the keyword mock reaches 55% on held-out messages (0 confidently wrong, but poor recall).
-- Injection, language and conflict detection are heuristics with documented misses.
-- Only Windows was verified; there is no automated browser end-to-end test (the browser flow was checked by hand, repeatedly).
-
-## Next time
-
-Write the independent evaluation set on Day 1, not Day 3; put the real provider behind the interface early with recorded fixture responses; add an automated browser test (e.g. Playwright) for the review flow; and keep docs next to the tests that prove each claim.
+**In my own words** (from the "what I unlearned" sections of my logs):
+- "All green on the first run" is now a signal to probe harder, not to move on. (Day 1)
+- A probe is for measuring. Fixing exactly what it found would make the next measurement meaningless. (Day 2)
+- The fresh clone, run strictly from the README, is the only setup test that counts. (Day 4)
+- Next time I'd write the independent test set on Day 1, not Day 3, and put a real AI provider behind the interface early.
+- **[I need to add this myself: how it felt to let AI write the code, and which habit was hardest to drop.]**

@@ -7,12 +7,16 @@ A small recruiting tool that takes a batch of candidate messages, groups them by
 
 Built for the MUST "Unlearn, Use, Raise the Load" 5-day challenge.
 
+### About this submission
+
+Inbox Helper groups candidate messages by what each person wants and drafts a short reply, and a human must review every draft; nothing is ever sent. The demo runs on a deterministic keyword mock, not a real AI model, and it scores 55% on 40 held-out messages written by a separate agent (none confidently wrong, but it misses a lot). I built it AI-first: AI wrote most of the code, a second agent reviewed it without seeing my conclusions, and every claim was checked with tests, probes and a fresh clone. What broke along the way is in the daily logs, `docs/stress-report.md` and `docs/prompt-log.md`. The five "day" phases were all worked on 26 October 2026, and the logs say so.
+
 **Stack:** React + TypeScript (Vite) frontend · Python FastAPI backend · deterministic mock AI provider (no API key required)
 
 ### Quick start
 
 ```bash
-git clone https://github.com/<your-username>/must-inbox-helper.git
+git clone https://github.com/junaid1233/must-inbox-helper.git
 cd must-inbox-helper
 ```
 
