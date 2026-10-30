@@ -7,6 +7,17 @@ A small recruiting tool that takes a batch of candidate messages, groups them by
 
 Built for the MUST "Unlearn, Use, Raise the Load" 5-day challenge.
 
+**Stack:** React + TypeScript (Vite) frontend · Python FastAPI backend · deterministic mock AI provider (no API key required)
+
+### Quick start
+
+```bash
+git clone https://github.com/<your-username>/must-inbox-helper.git
+cd must-inbox-helper
+```
+
+Then follow **Installation** and **Running** below (two terminals: backend on `:8000`, frontend on `:5173`). Open http://localhost:5173 → **Sample data** → **Load sample dataset**.
+
 | Deliverable | Where |
 |---|---|
 | Intent and scope | [intent.md](intent.md) |
