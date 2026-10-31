@@ -25,7 +25,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **How it was checked:** the author approved the folder choice explicitly ("Approved. Create must-inbox-helper/ with its own git repo and start Day 1 Task 1.").
 
-**Effect:** set the working pattern for the whole build: inspect → plan → approve → small task → verify → log. Commit `bf91e74`.
+**Effect:** set the working pattern for the whole build: inspect → plan → approve → small task → verify → log. Commit `0138c5b`.
 
 ## 2. Approval-gated task prompts (author → builder)
 
@@ -34,9 +34,9 @@ The human set the rules, approved each step, and decided what not to do.
 **Why they're short:** the opening directive carried the rules, so each later prompt only had to release the next step. The builder stated acceptance criteria and stopped after each task for approval. That gave 14 small commits instead of one large generation.
 
 **What was wrong:** the builder also made mistakes inside tasks, and they were caught and logged at the time:
-- a secret-scan command was wrong three ways (`80f1d75`, `c07fdfa`);
-- one fix cancelled out another fix (`c07fdfa`);
-- a too-new test library didn't support the machine's Node version (`a43f0e6`).
+- a secret-scan command was wrong three ways (`7df679a`, `fa76ad6`);
+- one fix cancelled out another fix (`fa76ad6`);
+- a too-new test library didn't support the machine's Node version (`7df5674`).
 
 ## 3. Independent code review (builder → reviewer agent), Day 1 Task 2
 
@@ -57,7 +57,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **How it was checked:** each finding became a regression test **before** fixing. 21 tests failed (plus 2 errors), confirming the findings; then all passed after the fixes.
 
-**Effect:** commit `c07fdfa`; `backend/tests/test_review_regressions.py`.
+**Effect:** commit `fa76ad6`; `backend/tests/test_review_regressions.py`.
 
 ## 4. Ambiguous prompt: "Try again" (author → builder)
 
@@ -69,7 +69,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **What was wrong:** two screenshots *looked* broken but were capture artefacts; measuring the page showed the layout was fine. They weren't "fixed".
 
-**Lesson:** a terse prompt works when the assumption is stated; the screenshot found a real bug, and measuring prevented two false fixes. Commit `4a05b19`.
+**Lesson:** a terse prompt works when the assumption is stated; the screenshot found a real bug, and measuring prevented two false fixes. Commit `b093524`.
 
 ## 5. Held-out evaluation data (builder → data-writer agent), Day 3
 
@@ -86,7 +86,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **How it was checked:** the baseline was measured **before** any fix. The keywords were deliberately **not** tuned on this set.
 
-**Effect:** commit `745d1e6`; `eval/heldout_messages.json`, `eval/run_heldout.py`.
+**Effect:** commit `30bed4e`; `eval/heldout_messages.json`, `eval/run_heldout.py`.
 
 ## 6. Stress expectations written from the brief, not the code (author → builder)
 
@@ -100,7 +100,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **What was wrong in the fix:** the first conflict check reused the *draft* outcome word list on *candidate* text. It flagged "Congrats on the new role at your agency!" and the demand "tell me I've been hired" as claims. Probing on unseen messages caught both; both are now regression tests.
 
-**Effect:** commit `745d1e6`; `docs/stress-report.md`.
+**Effect:** commit `30bed4e`; `docs/stress-report.md`.
 
 ## 7. Checking a tool's advice before following it (builder), Day 4
 
@@ -112,7 +112,7 @@ The human set the rules, approved each step, and decided what not to do.
 
 **Result:** `httpx2` is legitimate (by the original `httpx` author, maintained by Pydantic). But its newest release was 5 days old and it adds new dependencies. Kept `httpx` for a test-only use; recorded the reasoning in `pytest.ini`.
 
-**What was wrong:** the first warning filter named the wrong warning class, so it didn't match. Fixed. Commit `4ed19b2`.
+**What was wrong:** the first warning filter named the wrong warning class, so it didn't match. Fixed. Commit `22b9e4f`.
 
 ## 8. Self-check of written documents (builder), Day 4–5
 
@@ -122,7 +122,7 @@ Not a separate prompt; the builder re-read its own documents claim by claim agai
 - `unlearning-note.md` said "9 confirmed findings" (the log says 6 confirmed);
 - the Loom script misdescribed why sample message s-013 has low confidence.
 
-All four were plausible summaries that were wrong. Commits `4ed19b2`, `1a0b7f5`.
+All four were plausible summaries that were wrong. Commits `22b9e4f`, `ad86c7a`.
 
 ## 9. The real rubric changed the plan (author → builder), after Day 5
 
