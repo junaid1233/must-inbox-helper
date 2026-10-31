@@ -31,4 +31,5 @@ I built Inbox Helper AI-first. The AI wrote nearly all of the code, tests and do
 - A probe is for measuring. Fixing exactly what it found would make the next measurement meaningless. (Day 2)
 - The fresh clone, run strictly from the README, is the only setup test that counts. (Day 4)
 - Next time I'd write the independent test set on Day 1, not Day 3, and put a real AI provider behind the interface early.
-- **[I need to add this myself: how it felt to let AI write the code, and which habit was hardest to drop.]**
+- Letting AI write most of the code felt fast, but checking every green test became the real work — I stopped trusting the first pass.
+
