@@ -45,22 +45,26 @@ export default function App() {
   return (
     <div className="page">
       <header className="topbar">
-        <h1>Inbox Helper</h1>
-        {health && (
-          <span className={`badge ${health.demo_mode ? "badge-demo" : ""}`}>
-            {health.demo_mode ? "Demo mode · mock provider" : `Provider: ${health.provider}`}
-          </span>
-        )}
+        <div className="brand">
+          <h1>Inbox Helper</h1>
+          <p className="subtitle">Review candidate replies before you send them yourself</p>
+        </div>
+        <div className="topbar-side">
+          <p className="notice" role="note">
+            Drafts are never sent automatically. Human review is required.
+          </p>
+          {health && (
+            <span className={`badge ${health.demo_mode ? "badge-demo" : ""}`}>
+              {health.demo_mode ? "Demo mode · mock provider" : `Provider: ${health.provider}`}
+            </span>
+          )}
+        </div>
       </header>
-
-      <p className="notice" role="note">
-        Drafts are never sent automatically. Human review is required.
-      </p>
 
       <InputPanel busy={busy} run={run} />
 
       {busy && (
-        <p className="muted" role="status">
+        <p className="muted status-line" role="status">
           Processing…
         </p>
       )}
@@ -69,6 +73,7 @@ export default function App() {
           {error}
         </div>
       )}
+      {!batch && !busy && <p className="empty">Load messages to start a review.</p>}
       {batch && <BatchView batch={batch} review={review} dispatch={dispatch} />}
     </div>
   );

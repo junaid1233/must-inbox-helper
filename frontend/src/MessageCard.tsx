@@ -52,6 +52,7 @@ export function MessageCard({ result, review, dispatch }: Props) {
         </span>
       </header>
 
+      <p className="kicker">Candidate message</p>
       <blockquote className="original">{message.text}</blockquote>
       {(message.application_status || message.context) && (
         <dl className="known">
@@ -114,7 +115,7 @@ export function MessageCard({ result, review, dispatch }: Props) {
               Reject draft
             </button>
             {edited && (
-              <button type="button" className="secondary" onClick={() => dispatch({ type: "revert", id })} aria-label={`Revert edits for ${who}`}>
+              <button type="button" className="ghost" onClick={() => dispatch({ type: "revert", id })} aria-label={`Revert edits for ${who}`}>
                 Revert edits
               </button>
             )}
@@ -123,16 +124,16 @@ export function MessageCard({ result, review, dispatch }: Props) {
         {review.status === "approved" && (
           <>
             <p className="approved-note">Approved for use. Not sent: copy it into your own email or messaging tool.</p>
-            <button type="button" className="secondary" onClick={copy} aria-label={`Copy approved text for ${who}`}>
+            <button type="button" className="ghost" onClick={copy} aria-label={`Copy approved text for ${who}`}>
               Copy text
             </button>
-            <button type="button" className="secondary" onClick={() => dispatch({ type: "reopen", id })} aria-label={`Reopen draft for ${who}`}>
+            <button type="button" className="ghost" onClick={() => dispatch({ type: "reopen", id })} aria-label={`Reopen draft for ${who}`}>
               Reopen
             </button>
           </>
         )}
         {review.status === "rejected" && (
-          <button type="button" className="secondary" onClick={() => dispatch({ type: "reopen", id })} aria-label={`Reopen to revise draft for ${who}`}>
+          <button type="button" className="ghost" onClick={() => dispatch({ type: "reopen", id })} aria-label={`Reopen to revise draft for ${who}`}>
             Reopen to revise
           </button>
         )}

@@ -15,21 +15,37 @@ export function BatchView({ batch, review, dispatch }: Props) {
   const counts = reviewCounts(review);
   const { summary } = batch;
 
+  const metrics = [
+    { value: summary.received, label: "Received" },
+    { value: summary.processed, label: "Processed" },
+    { value: summary.rejected, label: "Row errors" },
+    { value: counts.pending, label: "Pending" },
+    { value: counts.approved, label: "Approved" },
+    { value: counts.rejected, label: "Rejected" },
+  ];
+
   return (
     <section aria-labelledby="results-heading" className="results">
       <div className="summary panel">
-        <h2 id="results-heading">Results</h2>
-        <p>
-          {summary.received} received · {summary.processed} processed · {summary.rejected} rejected
-        </p>
-        <p aria-live="polite">
+        <div className="summary-head">
+          <h2 id="results-heading">Results</h2>
+          <label className="inline">
+            <input type="checkbox" checked={attentionOnly} onChange={(e) => setAttentionOnly(e.target.checked)} />
+            Show only messages that need attention
+          </label>
+        </div>
+        <div className="metrics">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="metric">
+              <span className="metric-value">{metric.value}</span>
+              <span className="metric-label">{metric.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="review-line" aria-live="polite">
           Review: <strong>{counts.pending}</strong> pending · <strong>{counts.approved}</strong> approved ·{" "}
           <strong>{counts.rejected}</strong> rejected · {counts.edited} edited
         </p>
-        <label className="inline">
-          <input type="checkbox" checked={attentionOnly} onChange={(e) => setAttentionOnly(e.target.checked)} />
-          Show only messages that need attention
-        </label>
       </div>
 
       {batch.errors.length > 0 && (
